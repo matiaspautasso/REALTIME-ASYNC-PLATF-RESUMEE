@@ -33,10 +33,14 @@ export class ImportConsumer implements OnModuleInit, OnModuleDestroy {
         // retry, which starts a fresh BullMQ job with its own attempt budget.
         const prior = await prisma.jobAttempt.count({ where: { importJobId: job.data.importId } });
         const maxAttempts = job.opts.attempts ?? 1;
-        await this.processor.process(job.data, {
-          attemptNumber: prior + 1,
-          isLastAttempt: job.attemptsMade + 1 >= maxAttempts,
-        });
+        // Progress flows out as BullMQ job progress, which the API's QueueEvents
+        // bridge forwards to the Import's WebSocket room (ADR-0002); the return
+        // value carries the terminal snapshot to the 'completed' event.
+        return this.processor.process(
+          job.data,
+          { attemptNumber: prior + 1, isLastAttempt: job.attemptsMade + 1 >= maxAttempts },
+          (payload) => void job.updateProgress(payload),
+        );
       },
       { connection: this.connection, concurrency },
     );

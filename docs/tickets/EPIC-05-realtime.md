@@ -13,8 +13,8 @@ On the API side, subscribe to BullMQ `QueueEvents` (and worker-emitted progress)
 
 **Acceptance criteria**
 
-- [ ] Progress, completion, failure and retry signals from the queue are received on the API side.
-- [ ] Each is mapped to the `packages/contracts` event payload with the current `importId`.
+- [x] Progress, completion, failure and retry signals from the queue are received on the API side. *(`QueueEventsBridge` subscribes to BullMQ `QueueEvents`; e2e drives a real worker → Redis → bridge.)*
+- [x] Each is mapped to the `packages/contracts` event payload with the current `importId`. *(`toImportEventPayload` / `lifecycleEventFor`, unit-tested; terminal events read the persisted Import back from Postgres.)*
 
 ## TICKET-05.2 — WebSocket gateway and subscriptions
 
@@ -25,9 +25,9 @@ A Socket.IO gateway on namespace `/imports`. Clients send `import:subscribe { im
 
 **Acceptance criteria**
 
-- [ ] A client that subscribes to `imp_A` receives only `imp_A` events, not `imp_B`'s.
-- [ ] Event names come from the single source of truth in `packages/contracts` (01.3).
-- [ ] Subscribing does not itself mutate state; it only joins a room.
+- [x] A client that subscribes to `imp_A` receives only `imp_A` events, not `imp_B`'s. *(e2e with two socket.io clients asserts room isolation.)*
+- [x] Event names come from the single source of truth in `packages/contracts` (01.3). *(`ImportEvents` imported by both the gateway and the client.)*
+- [x] Subscribing does not itself mutate state; it only joins a room. *(`handleSubscribe` calls `client.join` only.)*
 
 ## TICKET-05.3 — Emit lifecycle events
 
@@ -38,6 +38,6 @@ Emit `import:progress`, `import:completed`, `import:failed` and `import:retrying
 
 **Acceptance criteria**
 
-- [ ] `import:progress` carries the full payload from `docs/api.md`.
-- [ ] `import:completed`/`import:failed` fire only after the terminal state is persisted (ADR-0006).
-- [ ] `import:retrying` fires when a new Attempt is scheduled.
+- [x] `import:progress` carries the full payload from `docs/api.md`. *(`ImportEventPayload` snapshot, asserted in the gateway e2e.)*
+- [x] `import:completed`/`import:failed` fire only after the terminal state is persisted (ADR-0006). *(Emitted from the queue `completed`/`failed` signals, which the worker raises only after persisting the terminal status; terminal events re-read Postgres.)*
+- [x] `import:retrying` fires when a new Attempt is scheduled. *(A failed job whose Import is not yet FAILED maps to `import:retrying`.)*

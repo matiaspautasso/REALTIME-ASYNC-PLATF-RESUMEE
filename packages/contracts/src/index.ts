@@ -28,7 +28,10 @@ export { IMPORTS_QUEUE_NAME, type ImportJobData } from './queue';
 export {
   IMPORTS_NAMESPACE,
   ImportEvents,
+  lifecycleEventFor,
+  toImportEventPayload,
   type ImportEventName,
   type ImportSubscribePayload,
   type ImportEventPayload,
+  type ImportJobSnapshot,
 } from './events';

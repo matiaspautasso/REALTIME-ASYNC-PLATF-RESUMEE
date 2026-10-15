@@ -3,12 +3,14 @@ import { ConfigService } from '@nestjs/config';
 import {
   calculateProgress,
   ImportStatus,
+  toImportEventPayload,
   validateProductRow,
+  type ImportEventPayload,
   type ImportJobData,
   type RowError,
   type ValidProduct,
 } from '@jobflow/contracts';
-import { prisma, runInTransaction, type TransactionClient } from '@jobflow/database';
+import { prisma, runInTransaction, type ImportJob, type TransactionClient } from '@jobflow/database';
 import { streamCsvBatches } from '../csv/csv-batch-reader';
 import { resolveTerminalStatus } from './terminal-status';
 
@@ -36,7 +38,11 @@ export class ImportProcessor {
 
   constructor(private readonly config: ConfigService) {}
 
-  async process(data: ImportJobData, attempt: AttemptContext): Promise<void> {
+  async process(
+    data: ImportJobData,
+    attempt: AttemptContext,
+    onProgress?: (payload: ImportEventPayload) => void,
+  ): Promise<ImportEventPayload> {
     const batchSize = this.config.get<number>('import.batchSize') ?? 100;
 
     const job = await prisma.importJob.findUniqueOrThrow({ where: { id: data.importId } });
@@ -66,13 +72,14 @@ export class ImportProcessor {
           }
         });
 
-        await runInTransaction((tx) =>
+        const committed = await runInTransaction((tx) =>
           this.commitBatch(tx, { importJobId: job.id, batchIndex, totalRows: job.totalRows, valid, errors }),
         );
+        onProgress?.(toPayload(committed)); // worker → QueueEvents → gateway (ADR-0002/0006)
         batchIndex += 1;
       }
 
-      await this.finish(job.id, attempt.attemptNumber);
+      return await this.finish(job.id, attempt.attemptNumber);
     } catch (error) {
       await this.fail(job.id, attempt, error);
       throw error;
@@ -83,10 +90,10 @@ export class ImportProcessor {
   private async commitBatch(
     tx: TransactionClient,
     params: { importJobId: string; batchIndex: number; totalRows: number; valid: ValidProduct[]; errors: RowError[] },
-  ): Promise<void> {
+  ): Promise<ImportJob> {
     const current = await tx.importJob.findUniqueOrThrow({ where: { id: params.importJobId } });
     if (current.committedBatches !== params.batchIndex) {
-      return; // another execution already committed this Batch — idempotent no-op (ADR-0005)
+      return current; // another execution already committed this Batch — idempotent no-op (ADR-0005)
     }
 
     for (const product of params.valid) {
@@ -109,7 +116,7 @@ export class ImportProcessor {
     }
 
     const processedRows = current.processedRows + params.valid.length + params.errors.length;
-    await tx.importJob.update({
+    return tx.importJob.update({
       where: { id: params.importJobId },
       data: {
         processedRows,
@@ -121,10 +128,11 @@ export class ImportProcessor {
     });
   }
 
-  /** Resolve and PERSIST the terminal status before any completion signal (ADR-0006). */
-  private async finish(importJobId: string, attemptNumber: number): Promise<void> {
+  /** Resolve and PERSIST the terminal status before any completion signal
+   * (ADR-0006), then return the terminal snapshot for the completion event. */
+  private async finish(importJobId: string, attemptNumber: number): Promise<ImportEventPayload> {
     const job = await prisma.importJob.findUniqueOrThrow({ where: { id: importJobId } });
-    await prisma.importJob.update({
+    const terminal = await prisma.importJob.update({
       where: { id: importJobId },
       data: {
         status: resolveTerminalStatus(job.failedRows),
@@ -135,6 +143,7 @@ export class ImportProcessor {
       where: { importJobId, attemptNumber },
       data: { status: 'SUCCEEDED', finishedAt: new Date() },
     });
+    return toPayload(terminal);
   }
 
   private async fail(importJobId: string, attempt: AttemptContext, error: unknown): Promise<void> {
@@ -148,4 +157,10 @@ export class ImportProcessor {
       await prisma.importJob.update({ where: { id: importJobId }, data: { status: ImportStatus.FAILED } });
     }
   }
+}
+
+/** Build the wire payload from a Prisma ImportJob, bridging its enum to the
+ * contracts enum (same string values, nominally distinct types). */
+function toPayload(job: ImportJob): ImportEventPayload {
+  return toImportEventPayload({ ...job, status: job.status as unknown as ImportStatus });
 }

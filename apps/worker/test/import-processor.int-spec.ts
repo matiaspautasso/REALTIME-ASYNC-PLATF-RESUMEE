@@ -55,7 +55,10 @@ describe('ImportProcessor (integration)', () => {
     const filePath = await csv('mixed', ['A,Alpha,1.00,5', 'B,,2.00,3', 'C,Charlie,-1,4', 'D,Delta,4.00,1']);
     const job = await seedJob(filePath, 4);
 
-    await run(processor, job);
+    const progress: number[] = [];
+    const data: ImportJobData = { importId: job.id, filePath: job.filePath };
+    await processor.process(data, { attemptNumber: 1, isLastAttempt: false }, (p) => progress.push(p.progress));
+    expect(progress).toEqual([50, 100]); // one emit per committed Batch
 
     const detail = await prisma.importJob.findUniqueOrThrow({ where: { id: job.id } });
     expect(detail.status).toBe('COMPLETED_WITH_ERRORS');
@@ -135,7 +138,8 @@ describe('ImportProcessor (integration)', () => {
     const filePath = await csv('data-error', ['A,Alpha,1.00,1', ',Nameless,2.00,2']);
     const job = await seedJob(filePath, 2);
 
-    await expect(run(processor, job)).resolves.toBeUndefined();
+    const payload = await run(processor, job);
+    expect(payload.status).toBe(ImportStatus.COMPLETED_WITH_ERRORS);
     const detail = await prisma.importJob.findUniqueOrThrow({ where: { id: job.id } });
     expect(detail.status).toBe('COMPLETED_WITH_ERRORS');
   });

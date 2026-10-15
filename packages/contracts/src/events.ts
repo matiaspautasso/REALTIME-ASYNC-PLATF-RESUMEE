@@ -42,3 +42,45 @@ export interface ImportEventPayload {
   successRows: number;
   failedRows: number;
 }
+
+/** An ImportJob snapshot as both the worker and the API read it (id, counters,
+ * status) — the input the wire payload is built from. */
+export interface ImportJobSnapshot {
+  id: string;
+  status: ImportStatus;
+  progress: number;
+  processedRows: number;
+  totalRows: number;
+  successRows: number;
+  failedRows: number;
+}
+
+/** Build the wire payload from an ImportJob snapshot, renaming `id` to the
+ * `importId` the client keys on. The single place this mapping lives. */
+export function toImportEventPayload(job: ImportJobSnapshot): ImportEventPayload {
+  return {
+    importId: job.id,
+    status: job.status,
+    progress: job.progress,
+    processedRows: job.processedRows,
+    totalRows: job.totalRows,
+    successRows: job.successRows,
+    failedRows: job.failedRows,
+  };
+}
+
+/** The lifecycle event name a status maps to: terminal success → Completed,
+ * FAILED → Failed, RETRYING → Retrying, anything else → Progress. */
+export function lifecycleEventFor(status: ImportStatus): ImportEventName {
+  switch (status) {
+    case ImportStatus.COMPLETED:
+    case ImportStatus.COMPLETED_WITH_ERRORS:
+      return ImportEvents.Completed;
+    case ImportStatus.FAILED:
+      return ImportEvents.Failed;
+    case ImportStatus.RETRYING:
+      return ImportEvents.Retrying;
+    default:
+      return ImportEvents.Progress;
+  }
+}
