@@ -34,6 +34,8 @@
   },
   "devDependencies": {
     "@nestjs/testing": "^11.2.7",
+    "@testcontainers/postgresql": "^10.18.0",
+    "@testcontainers/redis": "^10.18.0",
     "@types/express": "^5.0.6",
     "@types/jest": "29.5.14",
     "@types/multer": "^2.3.0",
