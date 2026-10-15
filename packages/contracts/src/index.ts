@@ -21,6 +21,9 @@ export type {
   PaginationQuery,
 } from './dto';
 
+// Queue contract (shared by API producer and worker consumer)
+export { IMPORTS_QUEUE_NAME, type ImportJobData } from './queue';
+
 // WebSocket event contract (TICKET-01.3)
 export {
   IMPORTS_NAMESPACE,
