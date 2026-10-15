@@ -1,0 +1,32 @@
+{
+  "name": "@jobflow/database",
+  "version": "0.1.0",
+  "private": true,
+  "description": "Prisma schema, migrations and the shared PrismaClient. See docs/tickets/EPIC-02-database.md.",
+  "main": "dist/index.js",
+  "types": "dist/index.d.ts",
+  "files": ["dist", "prisma"],
+  "scripts": {
+    "postinstall": "prisma generate",
+    "build": "tsc -p tsconfig.build.json",
+    "typecheck": "tsc -p tsconfig.json",
+    "lint": "echo \"(lint wired in TICKET-00.2)\"",
+    "test": "echo \"(integration tests live in EPIC-08)\"",
+    "test:unit": "echo \"(no unit tests — schema is integration-tested in EPIC-08)\"",
+    "generate": "prisma generate",
+    "migrate:dev": "prisma migrate dev",
+    "migrate:deploy": "prisma migrate deploy",
+    "seed": "prisma db seed"
+  },
+  "prisma": {
+    "seed": "tsx prisma/seed.ts"
+  },
+  "dependencies": {
+    "@prisma/client": "^6.19.3"
+  },
+  "devDependencies": {
+    "@types/node": "^22.10.1",
+    "prisma": "^6.19.3",
+    "tsx": "^4.23.15"
+  }
+}

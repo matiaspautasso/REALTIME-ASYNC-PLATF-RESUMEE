@@ -1,0 +1,7 @@
+sku,name,price,stock
+SKU-2001,Valid Product,10.00,5
+,Missing SKU,10.00,5
+SKU-2003,Zero Price,0,5
+SKU-2004,Negative Stock,10.00,-3
+SKU-2005,Fractional Stock,10.00,2.5
+SKU-2006,Another Valid Product,12.50,8
