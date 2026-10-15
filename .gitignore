@@ -21,8 +21,9 @@ coverage/
 playwright-report/
 test-results/
 
-# Local upload volume (CSV files live here in dev)
+# Local upload volume (CSV files live here in dev), at any depth
 data/uploads/
+**/data/uploads/
 
 # Logs
 *.log

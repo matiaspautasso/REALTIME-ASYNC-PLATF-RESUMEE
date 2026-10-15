@@ -69,7 +69,7 @@ pnpm dev
 
 The full one-command stack (`docker compose up --build` for the API, worker and web as well) is delivered in EPIC-09.
 
-> **Port already in use?** If host port `5432` (PostgreSQL) or `6379` (Redis) is taken by another local service, override it: `POSTGRES_PORT=5455 docker compose -f infra/docker-compose.yml up -d` and point `DATABASE_URL` at the new port in your `.env`.
+> **Port already in use?** If host port `5432` (PostgreSQL), `6379` (Redis) or `3000` (API) is taken by another local service, override it: e.g. `POSTGRES_PORT=5455 REDIS_PORT=6380 docker compose -f infra/docker-compose.yml up -d`, then point `DATABASE_URL` / `REDIS_PORT` / `API_PORT` at the new ports in your `.env`.
 
 ## Common commands
 
@@ -95,4 +95,10 @@ pnpm db:generate       # regenerate the Prisma client
 
 ## Status
 
-Delivered: monorepo scaffold, infrastructure, CI skeleton, the full **contracts** package (EPIC-01 — domain rules, DTOs, WebSocket contract) and the **database** package (EPIC-02 — Prisma schema, reproducible initial migration, client and seed). All green under `pnpm test:unit`, `pnpm typecheck` and `pnpm build`. Remaining work (API, worker, realtime, frontend, resilience hardening, full test suite, CI/CD) is tracked ticket by ticket in [`docs/tickets/`](./docs/tickets).
+Delivered:
+
+- **Contracts** (EPIC-01) — domain rules, DTOs, WebSocket + queue contracts.
+- **Database** (EPIC-02) — Prisma schema, reproducible initial migration, client and seed.
+- **API** (EPIC-03) — NestJS REST: health, CSV upload with a transactional outbox, outbox→BullMQ relay, paginated history/detail/products, row errors + CSV export, manual retry, and Swagger at `/docs`. Proven with unit tests and e2e tests that boot the app against real PostgreSQL + Redis.
+
+All green under `pnpm test:unit`, `pnpm typecheck` and `pnpm build`; the API's integration suite (`pnpm --filter @jobflow/api test:integration`) runs against Docker. Remaining work (worker, realtime, frontend, resilience hardening, full test suite, CI/CD) is tracked ticket by ticket in [`docs/tickets/`](./docs/tickets).

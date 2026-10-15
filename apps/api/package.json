@@ -2,11 +2,44 @@
   "name": "@jobflow/api",
   "version": "0.1.0",
   "private": true,
-  "description": "Stub — NestJS REST + WebSocket API. Implemented in docs/tickets/EPIC-03-api.md and EPIC-05.",
+  "description": "NestJS REST API + transactional outbox relay. See docs/tickets/EPIC-03-api.md.",
+  "main": "dist/main.js",
   "scripts": {
-    "lint": "echo \"(stub @jobflow/api) see docs/tickets/EPIC-03-api.md\"",
-    "typecheck": "echo \"(stub @jobflow/api)\"",
-    "test": "echo \"(stub @jobflow/api)\"",
-    "test:unit": "echo \"(stub @jobflow/api)\""
+    "build": "tsc -p tsconfig.build.json",
+    "typecheck": "tsc -p tsconfig.json",
+    "lint": "echo \"(lint wired in TICKET-00.2)\"",
+    "dev": "tsx watch src/main.ts",
+    "start": "node dist/main.js",
+    "test": "jest && jest -c jest.integration.config.js",
+    "test:unit": "jest",
+    "test:integration": "jest -c jest.integration.config.js"
+  },
+  "dependencies": {
+    "@jobflow/contracts": "workspace:*",
+    "@jobflow/database": "workspace:*",
+    "@nestjs/common": "^11.2.7",
+    "@nestjs/config": "^4.0.4",
+    "@nestjs/core": "^11.2.7",
+    "@nestjs/platform-express": "^11.2.7",
+    "@nestjs/swagger": "^11.4.7",
+    "bullmq": "^6.3.15",
+    "class-transformer": "^0.5.1",
+    "class-validator": "^0.15.1",
+    "ioredis": "^6.0.0",
+    "reflect-metadata": "^0.2.2",
+    "rxjs": "^7.8.2"
+  },
+  "devDependencies": {
+    "@nestjs/testing": "^11.2.7",
+    "@types/express": "^5.0.6",
+    "@types/jest": "29.5.14",
+    "@types/multer": "^2.3.0",
+    "@types/node": "^22.10.1",
+    "@types/supertest": "^7.2.1",
+    "jest": "29.7.0",
+    "supertest": "^7.3.1",
+    "ts-jest": "29.2.5",
+    "tsx": "^4.23.15",
+    "typescript": "5.7.2"
   }
 }

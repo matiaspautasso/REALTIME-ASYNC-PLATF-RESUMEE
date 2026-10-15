@@ -13,9 +13,9 @@ Bootstrap the Nest app with typed config, a global validation pipe (class-valida
 
 **Acceptance criteria**
 
-- [ ] App boots reading env via a typed config module.
-- [ ] `GET /health` returns `200` only when both Postgres and Redis are reachable, `503` otherwise.
-- [ ] Global `ValidationPipe` with whitelist + transform is enabled.
+- [x] App boots reading env via a typed config module.
+- [x] `GET /health` returns `200` only when both Postgres and Redis are reachable, `503` otherwise.
+- [x] Global `ValidationPipe` with whitelist + transform is enabled.
 
 ## TICKET-03.2 — Upload, validate and create Import (+ Outbox)
 
@@ -26,10 +26,10 @@ Bootstrap the Nest app with typed config, a global validation pipe (class-valida
 
 **Acceptance criteria**
 
-- [ ] Invalid file (wrong type, too big, missing columns, too many rows) ⇒ `400` and NO Import, NO Outbox row, NO stored file.
-- [ ] Valid file ⇒ `202` with `{ id, status: "QUEUED", progress: 0, totalRows }`.
-- [ ] Import row and Outbox row commit atomically (ADR-0004): a forced failure after the Import insert rolls back both.
-- [ ] The stored file path, not its contents, is what will reach the queue (ADR-0003).
+- [x] Invalid file (wrong type, too big, missing columns, too many rows) ⇒ `400` and NO Import, NO Outbox row, NO stored file.
+- [x] Valid file ⇒ `202` with `{ id, status: "QUEUED", progress: 0, totalRows }`.
+- [x] Import row and Outbox row commit atomically (ADR-0004): a forced failure after the Import insert rolls back both.
+- [x] The stored file path, not its contents, is what will reach the queue (ADR-0003).
 
 ## TICKET-03.3 — Outbox relay → BullMQ producer
 
@@ -40,9 +40,9 @@ A relay polls unpublished `Outbox` rows and enqueues them to BullMQ (path + impo
 
 **Acceptance criteria**
 
-- [ ] An unpublished Outbox row is enqueued exactly once on the happy path and marked published.
-- [ ] If Redis is down, the row stays unpublished and is retried on the next tick (not lost) — mandatory scenario 3.
-- [ ] Enqueue uses stable BullMQ job ids derived from the import id so a double relay tick cannot create two jobs.
+- [x] An unpublished Outbox row is enqueued exactly once on the happy path and marked published.
+- [x] If Redis is down, the row stays unpublished and is retried on the next tick (not lost) — mandatory scenario 3.
+- [x] Enqueue uses stable BullMQ job ids derived from the import id so a double relay tick cannot create two jobs.
 
 ## TICKET-03.4 — History, detail and products
 
@@ -53,9 +53,9 @@ A relay polls unpublished `Outbox` rows and enqueues them to BullMQ (path + impo
 
 **Acceptance criteria**
 
-- [ ] Responses match `Paginated<T>` and the detail shape from `docs/api.md`.
-- [ ] `GET /imports/:id` on an unknown id ⇒ `404`.
-- [ ] History is ordered newest first and honours `page`/`pageSize`.
+- [x] Responses match `Paginated<T>` and the detail shape from `docs/api.md`.
+- [x] `GET /imports/:id` on an unknown id ⇒ `404`.
+- [x] History is ordered newest first and honours `page`/`pageSize`.
 
 ## TICKET-03.5 — Row errors and CSV export
 
@@ -66,9 +66,9 @@ A relay polls unpublished `Outbox` rows and enqueues them to BullMQ (path + impo
 
 **Acceptance criteria**
 
-- [ ] Errors list returns `rowNumber`, `errorCode`, `message`.
-- [ ] `errors.csv` sets `Content-Type: text/csv` and `Content-Disposition: attachment`.
-- [ ] The CSV streams (does not buffer the whole set in memory).
+- [x] Errors list returns `rowNumber`, `errorCode`, `message`.
+- [x] `errors.csv` sets `Content-Type: text/csv` and `Content-Disposition: attachment`.
+- [ ] The CSV streams (does not buffer the whole set in memory). *(MVP returns a buffered CSV; error sets are bounded by the 10k-row cap. True streaming deferred.)*
 
 ## TICKET-03.6 — Manual retry
 
@@ -79,9 +79,9 @@ A relay polls unpublished `Outbox` rows and enqueues them to BullMQ (path + impo
 
 **Acceptance criteria**
 
-- [ ] Retrying a `FAILED` Import ⇒ `202` and a new Outbox row; status returns to `QUEUED`.
-- [ ] Retrying a non-terminal or `COMPLETED*` Import ⇒ `409 Conflict`.
-- [ ] The resumed run does not duplicate Products or counters (relies on ADR-0005).
+- [x] Retrying a `FAILED` Import ⇒ `202` and a new Outbox row; status returns to `QUEUED`.
+- [x] Retrying a non-terminal or `COMPLETED*` Import ⇒ `409 Conflict`.
+- [ ] The resumed run does not duplicate Products or counters (relies on ADR-0005). *(Guaranteed by the worker — verified in EPIC-04/08.)*
 
 ## TICKET-03.7 — Swagger / OpenAPI
 
@@ -91,5 +91,5 @@ Expose Swagger UI at `/docs` generated from the DTOs and decorators.
 
 **Acceptance criteria**
 
-- [ ] `/docs` lists every endpoint with request/response schemas.
-- [ ] Response examples match `docs/api.md`.
+- [x] `/docs` lists every endpoint with request/response schemas.
+- [ ] Response examples match `docs/api.md`. *(Swagger lists every endpoint and schema from the DTOs; curated per-field examples deferred.)*
