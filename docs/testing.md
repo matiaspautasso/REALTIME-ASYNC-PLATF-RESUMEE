@@ -28,7 +28,7 @@ These map directly to the resilience requirements and must each have a test:
 
 ## Conventions
 
-- Unit test files sit beside the code: `*.spec.ts`.
-- Integration tests live under `apps/<app>/test/integration`, spin up containers in a global setup, and are excluded from the default unit run.
-- Each mandatory scenario names the number above in its `describe` so coverage is auditable.
+- Unit test files sit beside the code: `*.spec.ts` under `src/` (Jest), `*.test.ts(x)` for the web (Vitest).
+- Integration tests live under `apps/<app>/test/` (`*.int-spec.ts` / `*.e2e-spec.ts`), boot real PostgreSQL + Redis with Testcontainers in a Jest global setup, run serially, and are excluded from the default unit run.
+- Each mandatory scenario names the number above in its `describe` so coverage is auditable (see `apps/worker/test/resilience-scenarios.int-spec.ts` and the outbox recovery test for scenario 3).
 - Coverage is reported per package and aggregated in CI (see [adr/](./adr) and the CI workflow).

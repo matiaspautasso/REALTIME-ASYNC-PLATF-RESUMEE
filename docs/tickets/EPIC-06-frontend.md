@@ -13,9 +13,9 @@ Vite app with a typed REST client (using `packages/contracts` types), a TanStack
 
 **Acceptance criteria**
 
-- [ ] REST client and event payloads are typed from `packages/contracts` (no hand-redeclared shapes).
-- [ ] On socket (re)connect the app re-fetches via REST before applying deltas — mandatory scenario 6.
-- [ ] `VITE_API_URL` configures the backend origin.
+- [x] REST client and event payloads are typed from `packages/contracts` (no hand-redeclared shapes).
+- [x] On socket (re)connect the app re-fetches via REST before applying deltas — mandatory scenario 6.
+- [x] `VITE_API_URL` configures the backend origin.
 
 ## TICKET-06.2 — Dashboard
 
@@ -26,8 +26,8 @@ The landing dashboard: total imports, in-process count, finished count, and a li
 
 **Acceptance criteria**
 
-- [ ] Counters reflect `GET /imports` data.
-- [ ] Active imports show a live progress bar driven by `import:progress`.
+- [x] Counters reflect `GET /imports` data.
+- [x] Active imports show a live progress bar driven by `import:progress`.
 
 ## TICKET-06.3 — New import (upload)
 
@@ -38,8 +38,8 @@ A CSV upload screen that posts to `/imports` and routes to the detail view on `2
 
 **Acceptance criteria**
 
-- [ ] Client-side guard for type and 5 MB before upload; server remains the authority.
-- [ ] A `400` from the API surfaces the reason without leaving the screen.
+- [x] Client-side guard for type and 5 MB before upload; server remains the authority.
+- [x] A `400` from the API surfaces the reason without leaving the screen.
 
 ## TICKET-06.4 — Import detail (live)
 
@@ -50,9 +50,9 @@ Detail view: percentage, processed/total, success/failed counts, status, the err
 
 **Acceptance criteria**
 
-- [ ] Subscribes to the Import's room and updates progress without a manual refresh.
-- [ ] Shows the terminal outcome distinctly for `COMPLETED`, `COMPLETED_WITH_ERRORS`, `FAILED`.
-- [ ] Lists `JobAttempt`s with their outcome.
+- [x] Subscribes to the Import's room and updates progress without a manual refresh.
+- [x] Shows the terminal outcome distinctly for `COMPLETED`, `COMPLETED_WITH_ERRORS`, `FAILED`.
+- [x] Lists `JobAttempt`s with their outcome.
 
 ## TICKET-06.5 — History, retry and error download
 
@@ -63,6 +63,6 @@ Paginated, filterable history table with a retry action on `FAILED` rows and an 
 
 **Acceptance criteria**
 
-- [ ] Table paginates and filters by status.
-- [ ] Retry is offered ONLY on `FAILED` imports and calls `POST /imports/:id/retry`.
-- [ ] Error download hits `GET /imports/:id/errors.csv`.
+- [x] Table paginates and filters by status.
+- [x] Retry is offered ONLY on `FAILED` imports and calls `POST /imports/:id/retry`.
+- [x] Error download hits `GET /imports/:id/errors.csv`.

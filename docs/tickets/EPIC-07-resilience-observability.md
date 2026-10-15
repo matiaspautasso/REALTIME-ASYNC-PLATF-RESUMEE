@@ -12,9 +12,9 @@ Structured (JSON) logs across api and worker, keyed by `importId`, `jobId`, `att
 
 **Acceptance criteria**
 
-- [ ] Every log line in a job's lifecycle can be filtered by `importId`.
-- [ ] Batch logs include row count and duration.
-- [ ] Retries log the attempt number and the Infrastructure Error cause.
+- [x] Every log line in a job's lifecycle can be filtered by `importId`.
+- [x] Batch logs include row count and duration.
+- [x] Retries log the attempt number and the Infrastructure Error cause.
 
 ## TICKET-07.2 — Concurrency configuration
 
@@ -25,8 +25,8 @@ Structured (JSON) logs across api and worker, keyed by `importId`, `jobId`, `att
 
 **Acceptance criteria**
 
-- [ ] Two imports process concurrently without corrupting each other's counters — mandatory scenario 7.
-- [ ] Concurrency is read from env and documented in `.env.example`.
+- [x] Two imports process concurrently without corrupting each other's counters — mandatory scenario 7.
+- [x] Concurrency is read from env and documented in `.env.example`.
 
 ## TICKET-07.3 — Outbox / enqueue failure recovery
 
@@ -36,5 +36,5 @@ Explicitly handle the "Postgres committed, Redis publish failed" window and surf
 
 **Acceptance criteria**
 
-- [ ] An Import whose Outbox row never published is detectable (unpublished + age) and re-published on recovery — mandatory scenario 3.
-- [ ] No Import can sit in `QUEUED` forever once Redis is back.
+- [x] An Import whose Outbox row never published is detectable (unpublished + age) and re-published on recovery — mandatory scenario 3.
+- [x] No Import can sit in `QUEUED` forever once Redis is back.

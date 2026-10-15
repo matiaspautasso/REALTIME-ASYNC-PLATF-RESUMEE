@@ -1,12 +1,20 @@
-# JobFlow local stack. For the MVP everything runs locally (see docs/adr).
-#
-# Today this brings up the infrastructure every app needs: PostgreSQL and
-# Redis, plus the shared upload volume. The api / worker / web service blocks
-# are wired in TICKET-09.2 once their Dockerfiles exist; the commented block
-# below is the intended shape (note: api and worker mount the SAME upload
-# volume — ADR-0003).
+# JobFlow full local stack (TICKET-09.2). `docker compose up --build` from a
+# clean clone brings up PostgreSQL, Redis, runs the migrations, and starts the
+# API, worker and web. The api and worker mount the SAME upload volume so the
+# worker reads the CSV the API wrote (ADR-0003). Run from the repo root:
+#   docker compose -f infra/docker-compose.yml up --build
 
 name: jobflow
+
+# Shared backend connection + import tuning for the api and worker containers.
+x-backend-env: &backend-env
+  DATABASE_URL: postgresql://${POSTGRES_USER:-jobflow}:${POSTGRES_PASSWORD:-jobflow}@postgres:5432/${POSTGRES_DB:-jobflow}?schema=public
+  REDIS_HOST: redis
+  REDIS_PORT: "6379"
+  UPLOAD_DIR: /data/uploads
+  IMPORT_BATCH_SIZE: ${IMPORT_BATCH_SIZE:-100}
+  IMPORT_MAX_ATTEMPTS: ${IMPORT_MAX_ATTEMPTS:-3}
+  WORKER_CONCURRENCY: ${WORKER_CONCURRENCY:-2}
 
 services:
   postgres:
@@ -35,28 +43,65 @@ services:
       timeout: 5s
       retries: 10
 
-  # --- Wired in TICKET-09.2 (Dockerfiles) ---------------------------------
-  # api:
-  #   build: { context: .., dockerfile: apps/api/Dockerfile }
-  #   env_file: ../.env
-  #   depends_on:
-  #     postgres: { condition: service_healthy }
-  #     redis: { condition: service_healthy }
-  #   ports: ["${API_PORT:-3000}:3000"]
-  #   volumes: [uploads:/data/uploads]
-  #
-  # worker:
-  #   build: { context: .., dockerfile: apps/worker/Dockerfile }
-  #   env_file: ../.env
-  #   depends_on:
-  #     postgres: { condition: service_healthy }
-  #     redis: { condition: service_healthy }
-  #   volumes: [uploads:/data/uploads]   # SAME volume as api (ADR-0003)
-  #
-  # web:
-  #   build: { context: .., dockerfile: apps/web/Dockerfile }
-  #   depends_on: [api]
-  #   ports: ["${WEB_PORT:-5173}:5173"]
+  # One-shot: apply Prisma migrations, then exit. The api and worker wait for it.
+  migrate:
+    build:
+      context: ..
+      dockerfile: apps/api/Dockerfile
+    working_dir: /repo/packages/database
+    environment:
+      DATABASE_URL: postgresql://${POSTGRES_USER:-jobflow}:${POSTGRES_PASSWORD:-jobflow}@postgres:5432/${POSTGRES_DB:-jobflow}?schema=public
+    command: ["pnpm", "prisma", "migrate", "deploy"]
+    depends_on:
+      postgres:
+        condition: service_healthy
+    restart: "no"
+
+  api:
+    build:
+      context: ..
+      dockerfile: apps/api/Dockerfile
+    environment:
+      <<: *backend-env
+      API_PORT: "3000"
+    depends_on:
+      postgres:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+      migrate:
+        condition: service_completed_successfully
+    ports:
+      - "${API_PORT:-3000}:3000"
+    volumes:
+      - uploads:/data/uploads
+
+  worker:
+    build:
+      context: ..
+      dockerfile: apps/worker/Dockerfile
+    environment:
+      <<: *backend-env
+    depends_on:
+      postgres:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+      migrate:
+        condition: service_completed_successfully
+    volumes:
+      - uploads:/data/uploads # SAME volume as api (ADR-0003)
+
+  web:
+    build:
+      context: ..
+      dockerfile: apps/web/Dockerfile
+      args:
+        VITE_API_URL: http://localhost:${API_PORT:-3000}
+    depends_on:
+      - api
+    ports:
+      - "${WEB_PORT:-5173}:5173"
 
 volumes:
   postgres-data:

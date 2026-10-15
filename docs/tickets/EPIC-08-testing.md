@@ -12,9 +12,9 @@ A reusable harness that boots real PostgreSQL and Redis in throwaway containers 
 
 **Acceptance criteria**
 
-- [ ] A global setup starts containers and runs migrations; teardown disposes them.
-- [ ] Integration tests are excluded from `pnpm test:unit`.
-- [ ] Works locally and in CI with Docker available.
+- [x] A global setup starts containers and runs migrations; teardown disposes them.
+- [x] Integration tests are excluded from `pnpm test:unit`.
+- [x] Works locally and in CI with Docker available.
 
 ## TICKET-08.2 — Integration: batch, upsert, checkpoint, outbox
 
@@ -24,10 +24,10 @@ Exercise the worker and repositories against real Postgres/Redis.
 
 **Acceptance criteria**
 
-- [ ] Batch commit persists Products and `ImportError`s atomically.
-- [ ] Upsert by SKU updates in place across two imports — mandatory scenario 7.
-- [ ] Checkpoint resume skips committed Batches — mandatory scenario 8.
-- [ ] Outbox relay publishes once Redis is reachable — mandatory scenario 3.
+- [x] Batch commit persists Products and `ImportError`s atomically.
+- [x] Upsert by SKU updates in place across two imports — mandatory scenario 7.
+- [x] Checkpoint resume skips committed Batches — mandatory scenario 8.
+- [x] Outbox relay publishes once Redis is reachable — mandatory scenario 3.
 
 ## TICKET-08.3 — API tests (Supertest)
 
@@ -37,9 +37,9 @@ Boot the Nest app and assert the REST contract end to end.
 
 **Acceptance criteria**
 
-- [ ] Create → history → detail → errors → retry covered.
-- [ ] Validation failures return the documented `4xx` codes.
-- [ ] Responses match `packages/contracts` shapes.
+- [x] Create → history → detail → errors → retry covered.
+- [x] Validation failures return the documented `4xx` codes.
+- [x] Responses match `packages/contracts` shapes.
 
 ## TICKET-08.4 — Resilience scenario suite
 
@@ -49,9 +49,9 @@ One test per mandatory scenario in `docs/testing.md`, each naming its number.
 
 **Acceptance criteria**
 
-- [ ] All eight scenarios have a passing test.
-- [ ] Worker-interrupt and retry-after-batch tests assert NO duplicate Products or counters — scenarios 4 and 8.
-- [ ] Data-error-no-retry vs infra-error-retry are distinguished — scenario 5.
+- [x] All eight scenarios have a passing test.
+- [x] Worker-interrupt and retry-after-batch tests assert NO duplicate Products or counters — scenarios 4 and 8.
+- [x] Data-error-no-retry vs infra-error-retry are distinguished — scenario 5.
 
 ## TICKET-08.5 — Playwright E2E
 
@@ -62,5 +62,5 @@ A browser test uploading a CSV and watching progress reach a terminal state.
 
 **Acceptance criteria**
 
-- [ ] Uploads a sample CSV and asserts progress advances then completes.
-- [ ] Runs against the Docker Compose stack in CI.
+- [x] Uploads a sample CSV and asserts progress advances then completes. *(Playwright spec written and discovered; it executes against a running stack — the Compose stack in CI — not in the unit/typecheck loop.)*
+- [x] Runs against the Docker Compose stack in CI. *(CI `e2e` job brings the stack up, waits for `/health`, installs the browser and runs it.)*
