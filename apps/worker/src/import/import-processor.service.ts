@@ -12,6 +12,7 @@ import {
 } from '@jobflow/contracts';
 import { prisma, runInTransaction, type ImportJob, type TransactionClient } from '@jobflow/database';
 import { streamCsvBatches } from '../csv/csv-batch-reader';
+import { StructuredLogger } from '../logging/structured-logger';
 import { resolveTerminalStatus } from './terminal-status';
 
 /** What BullMQ knows about the current execution of a job. */
@@ -35,6 +36,7 @@ export interface AttemptContext {
 @Injectable()
 export class ImportProcessor {
   private readonly logger = new Logger(ImportProcessor.name);
+  private readonly slog = new StructuredLogger({ component: 'worker' });
 
   constructor(private readonly config: ConfigService) {}
 
@@ -45,6 +47,7 @@ export class ImportProcessor {
   ): Promise<ImportEventPayload> {
     const batchSize = this.config.get<number>('import.batchSize') ?? 100;
 
+    const log = this.slog.child({ importId: data.importId, attemptNumber: attempt.attemptNumber });
     const job = await prisma.importJob.findUniqueOrThrow({ where: { id: data.importId } });
     const resumeFrom = job.committedBatches;
 
@@ -52,6 +55,7 @@ export class ImportProcessor {
       data: { importJobId: job.id, attemptNumber: attempt.attemptNumber, status: 'RUNNING' },
     });
     await prisma.importJob.update({ where: { id: job.id }, data: { status: 'PROCESSING' } });
+    log.info('attempt.started', { resumeFromBatch: resumeFrom });
 
     try {
       let batchIndex = 0;
@@ -72,16 +76,31 @@ export class ImportProcessor {
           }
         });
 
+        const startedAt = Date.now();
         const committed = await runInTransaction((tx) =>
           this.commitBatch(tx, { importJobId: job.id, batchIndex, totalRows: job.totalRows, valid, errors }),
         );
+        log.info('batch.committed', {
+          batchIndex,
+          rows: batch.rows.length,
+          success: valid.length,
+          failed: errors.length,
+          durationMs: Date.now() - startedAt,
+          progress: committed.progress,
+        });
         onProgress?.(toPayload(committed)); // worker → QueueEvents → gateway (ADR-0002/0006)
         batchIndex += 1;
       }
 
-      return await this.finish(job.id, attempt.attemptNumber);
+      const terminal = await this.finish(job.id, attempt.attemptNumber);
+      log.info('import.finished', { status: terminal.status, successRows: terminal.successRows, failedRows: terminal.failedRows });
+      return terminal;
     } catch (error) {
       await this.fail(job.id, attempt, error);
+      log.error('attempt.failed', {
+        isLastAttempt: attempt.isLastAttempt,
+        cause: error instanceof Error ? error.message : String(error),
+      });
       throw error;
     }
   }

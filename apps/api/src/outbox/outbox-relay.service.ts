@@ -1,12 +1,15 @@
-import { Inject, Injectable, Logger, OnModuleDestroy, OnModuleInit } from '@nestjs/common';
+import { Inject, Injectable, OnModuleDestroy, OnModuleInit } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import { Queue } from 'bullmq';
 import { type ImportJobData } from '@jobflow/contracts';
 import { prisma } from '@jobflow/database';
 import { IMPORTS_QUEUE } from '../redis/redis.module';
+import { StructuredLogger } from '../logging/structured-logger';
 
 const POLL_INTERVAL_MS = 1000;
 const BATCH_SIZE = 50;
+/** An unpublished Outbox row older than this is considered stuck and surfaced. */
+const STUCK_AFTER_MS = 30_000;
 
 /**
  * Transactional outbox relay (ADR-0004). Polls unpublished Outbox rows and
@@ -19,7 +22,7 @@ const BATCH_SIZE = 50;
  */
 @Injectable()
 export class OutboxRelayService implements OnModuleInit, OnModuleDestroy {
-  private readonly logger = new Logger(OutboxRelayService.name);
+  private readonly slog = new StructuredLogger({ component: 'api', relay: 'outbox' });
   private timer?: NodeJS.Timeout;
 
   constructor(
@@ -32,8 +35,27 @@ export class OutboxRelayService implements OnModuleInit, OnModuleDestroy {
       return;
     }
     this.timer = setInterval(() => {
-      void this.publishPending();
+      void this.tick();
     }, POLL_INTERVAL_MS);
+  }
+
+  /** One relay cycle: publish what is pending, then surface anything stuck so a
+   * row that outlived a Redis outage is visible and not silently lost. */
+  private async tick(): Promise<void> {
+    await this.publishPending();
+    const stuck = await this.countStuck(STUCK_AFTER_MS);
+    if (stuck > 0) {
+      this.slog.warn('outbox.stuck', { count: stuck, olderThanMs: STUCK_AFTER_MS });
+    }
+  }
+
+  /** How many Outbox rows are still unpublished and older than `ageMs` — a
+   * detectable "Postgres committed but Redis publish failed" backlog (ADR-0004,
+   * mandatory scenario 3). */
+  countStuck(ageMs: number): Promise<number> {
+    return prisma.outbox.count({
+      where: { publishedAt: null, createdAt: { lt: new Date(Date.now() - ageMs) } },
+    });
   }
 
   onModuleDestroy(): void {
@@ -63,9 +85,13 @@ export class OutboxRelayService implements OnModuleInit, OnModuleDestroy {
           removeOnComplete: true,
         });
         await prisma.outbox.update({ where: { id: row.id }, data: { publishedAt: new Date() } });
+        this.slog.info('outbox.published', { outboxId: row.id, importId: data.importId });
         published += 1;
       } catch (error) {
-        this.logger.warn(`Failed to publish outbox row ${row.id}; will retry next tick`, error as Error);
+        this.slog.warn('outbox.publish_failed', {
+          outboxId: row.id,
+          cause: error instanceof Error ? error.message : String(error),
+        });
       }
     }
     return published;
