@@ -1,0 +1,12 @@
+{
+  "name": "@jobflow/worker",
+  "version": "0.1.0",
+  "private": true,
+  "description": "Stub — NestJS BullMQ consumer. Implemented in docs/tickets/EPIC-04-worker.md.",
+  "scripts": {
+    "lint": "echo \"(stub @jobflow/worker) see docs/tickets/EPIC-04-worker.md\"",
+    "typecheck": "echo \"(stub @jobflow/worker)\"",
+    "test": "echo \"(stub @jobflow/worker)\"",
+    "test:unit": "echo \"(stub @jobflow/worker)\""
+  }
+}

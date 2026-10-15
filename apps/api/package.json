@@ -1,0 +1,12 @@
+{
+  "name": "@jobflow/api",
+  "version": "0.1.0",
+  "private": true,
+  "description": "Stub — NestJS REST + WebSocket API. Implemented in docs/tickets/EPIC-03-api.md and EPIC-05.",
+  "scripts": {
+    "lint": "echo \"(stub @jobflow/api) see docs/tickets/EPIC-03-api.md\"",
+    "typecheck": "echo \"(stub @jobflow/api)\"",
+    "test": "echo \"(stub @jobflow/api)\"",
+    "test:unit": "echo \"(stub @jobflow/api)\""
+  }
+}

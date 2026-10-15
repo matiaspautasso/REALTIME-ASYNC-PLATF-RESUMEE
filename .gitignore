@@ -1,0 +1,37 @@
+# Dependencies
+node_modules/
+
+# Build output
+dist/
+build/
+*.tsbuildinfo
+
+# Turborepo
+.turbo/
+
+# Prisma generated client
+packages/database/generated/
+
+# Env
+.env
+.env.*.local
+
+# Test / coverage
+coverage/
+playwright-report/
+test-results/
+
+# Local upload volume (CSV files live here in dev)
+data/uploads/
+
+# Logs
+*.log
+npm-debug.log*
+pnpm-debug.log*
+
+# OS / editor
+.DS_Store
+Thumbs.db
+.idea/
+.vscode/*
+!.vscode/extensions.json

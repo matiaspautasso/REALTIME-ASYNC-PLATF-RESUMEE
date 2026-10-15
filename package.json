@@ -1,0 +1,29 @@
+{
+  "name": "jobflow",
+  "version": "0.1.0",
+  "private": true,
+  "description": "JobFlow — Distributed Job Processing Platform. Async CSV product import with queues, independent workers, automatic retries and realtime monitoring.",
+  "packageManager": "pnpm@10.33.0",
+  "engines": {
+    "node": ">=20"
+  },
+  "scripts": {
+    "build": "turbo run build",
+    "dev": "turbo run dev",
+    "lint": "turbo run lint",
+    "typecheck": "turbo run typecheck",
+    "test": "turbo run test",
+    "test:unit": "turbo run test:unit",
+    "test:integration": "turbo run test:integration",
+    "test:e2e": "turbo run test:e2e",
+    "db:generate": "pnpm --filter @jobflow/database generate",
+    "db:migrate": "pnpm --filter @jobflow/database migrate:dev"
+  },
+  "devDependencies": {
+    "turbo": "2.3.3",
+    "typescript": "5.7.2"
+  },
+  "pnpm": {
+    "onlyBuiltDependencies": ["@prisma/client", "prisma", "esbuild"]
+  }
+}

@@ -1,0 +1,12 @@
+{
+  "name": "@jobflow/web",
+  "version": "0.1.0",
+  "private": true,
+  "description": "Stub — React + Vite dashboard. Implemented in docs/tickets/EPIC-06-frontend.md.",
+  "scripts": {
+    "lint": "echo \"(stub @jobflow/web) see docs/tickets/EPIC-06-frontend.md\"",
+    "typecheck": "echo \"(stub @jobflow/web)\"",
+    "test": "echo \"(stub @jobflow/web)\"",
+    "test:unit": "echo \"(stub @jobflow/web)\""
+  }
+}
