@@ -2,11 +2,38 @@
   "name": "@jobflow/web",
   "version": "0.1.0",
   "private": true,
-  "description": "Stub — React + Vite dashboard. Implemented in docs/tickets/EPIC-06-frontend.md.",
+  "description": "React + Vite dashboard for JobFlow — realtime CSV import monitoring (EPIC-06).",
+  "type": "module",
   "scripts": {
-    "lint": "echo \"(stub @jobflow/web) see docs/tickets/EPIC-06-frontend.md\"",
-    "typecheck": "echo \"(stub @jobflow/web)\"",
-    "test": "echo \"(stub @jobflow/web)\"",
-    "test:unit": "echo \"(stub @jobflow/web)\""
+    "dev": "vite",
+    "build": "tsc -p tsconfig.json --noEmit && vite build",
+    "typecheck": "tsc -p tsconfig.json --noEmit",
+    "lint": "echo \"(lint wired in TICKET-00.2)\"",
+    "test": "vitest run",
+    "test:unit": "vitest run",
+    "test:e2e": "playwright test",
+    "preview": "vite preview"
+  },
+  "dependencies": {
+    "@jobflow/contracts": "workspace:*",
+    "@tanstack/react-query": "^5.62.0",
+    "react": "^18.3.1",
+    "react-dom": "^18.3.1",
+    "react-router-dom": "^6.28.0",
+    "socket.io-client": "^4.8.1"
+  },
+  "devDependencies": {
+    "@playwright/test": "^1.49.0",
+    "@testing-library/jest-dom": "^6.6.3",
+    "@testing-library/react": "^16.1.0",
+    "@testing-library/user-event": "^14.5.2",
+    "@types/node": "^22.10.1",
+    "@types/react": "^18.3.12",
+    "@types/react-dom": "^18.3.1",
+    "@vitejs/plugin-react": "^5.0.0",
+    "jsdom": "^25.0.1",
+    "typescript": "5.7.2",
+    "vite": "^7.0.0",
+    "vitest": "^3.0.0"
   }
 }
