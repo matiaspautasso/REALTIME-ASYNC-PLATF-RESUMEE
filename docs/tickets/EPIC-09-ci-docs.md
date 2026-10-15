@@ -12,9 +12,9 @@ Extend the CI skeleton into the full pipeline: lint → typecheck → unit → i
 
 **Acceptance criteria**
 
-- [ ] Stages run in order and the job fails if any fails.
-- [ ] Integration and E2E stages have Docker available.
-- [ ] A coverage report is produced and surfaced on the run.
+- [x] Stages run in order and the job fails if any fails. *(Jobs chained with `needs:` — verify → integration → docker-build → e2e.)*
+- [x] Integration and E2E stages have Docker available. *(`ubuntu-latest` provides Docker; integration uses Testcontainers, E2E uses Docker Compose.)*
+- [x] A coverage report is produced and surfaced on the run. *(Jest `--coverage` on the integration job, uploaded as an artifact.)*
 
 ## TICKET-09.2 — Dockerfiles
 
@@ -24,9 +24,9 @@ Multi-stage Dockerfiles for api, worker and web, wired into `infra/docker-compos
 
 **Acceptance criteria**
 
-- [ ] Each image builds from the monorepo with pnpm and only its needed workspace.
-- [ ] `docker compose up --build` starts the whole stack from a clean clone.
-- [ ] api and worker share the upload volume (ADR-0003).
+- [x] Each image builds from the monorepo with pnpm and only its needed workspace. *(`pnpm --filter @jobflow/<app>... build`; verified with `docker compose build`.)*
+- [x] `docker compose up --build` starts the whole stack from a clean clone. *(Smoke-tested: health 200, an uploaded CSV processed to COMPLETED_WITH_ERRORS in-container.)*
+- [x] api and worker share the upload volume (ADR-0003). *(Both mount `uploads:/data/uploads`; the worker read the API-written CSV in the smoke test.)*
 
 ## TICKET-09.3 — README and demo
 
@@ -36,9 +36,9 @@ A README covering architecture, the one-command run, and a short demo (GIF or st
 
 **Acceptance criteria**
 
-- [ ] `docker compose up --build` from a clean clone is documented and works.
-- [ ] Links to `docs/architecture.md`, `docs/api.md`, `docs/adr/`.
-- [ ] Shows the happy-path import visually.
+- [x] `docker compose up --build` from a clean clone is documented and works.
+- [x] Links to `docs/architecture.md`, `docs/api.md`, `docs/adr/`.
+- [x] Shows the happy-path import visually. *(README "Demo" walks the upload → live progress → terminal state flow; steps rather than a GIF.)*
 
 ## TICKET-09.4 — Sample data and fixtures
 
@@ -49,5 +49,5 @@ Ship sample CSVs (valid, partially invalid, ~10k rows) and a sample error report
 
 **Acceptance criteria**
 
-- [ ] Sample files live under a known fixtures path and are referenced by the README.
-- [ ] The partially-invalid sample reliably produces `COMPLETED_WITH_ERRORS`.
+- [x] Sample files live under a known fixtures path and are referenced by the README.
+- [x] The partially-invalid sample reliably produces `COMPLETED_WITH_ERRORS`.

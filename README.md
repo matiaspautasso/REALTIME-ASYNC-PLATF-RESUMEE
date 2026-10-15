@@ -44,32 +44,60 @@ docs/         architecture, ADRs, API contract, testing strategy, ticket backlog
 samples/      example CSVs (valid, partially invalid, 10k rows)
 ```
 
-## How to run it locally
+## Run the whole stack with one command
+
+Requirements: **Docker**. From a clean clone:
+
+```bash
+cp .env.example .env
+docker compose -f infra/docker-compose.yml up --build
+```
+
+This builds the api, worker and web images, waits for PostgreSQL and Redis, runs
+the migrations, and starts everything. Then open:
+
+- **Web dashboard** → http://localhost:5173
+- **API + Swagger** → http://localhost:3000/docs
+- **Health** → http://localhost:3000/health
+
+### Demo: a CSV import end to end
+
+1. Open the dashboard and go to **New import**.
+2. Upload `samples/products-with-errors.csv` (2 valid rows, 4 invalid).
+3. You are routed to the import detail view; the **progress bar advances live**
+   over the WebSocket as the worker commits batches.
+4. It finishes **COMPLETED_WITH_ERRORS** (progress 100%, 2 succeeded, 4 failed);
+   the row errors are listed and downloadable as `errors.csv`, and the attempt
+   history is shown. `samples/products-valid.csv` finishes **COMPLETED**, and
+   `samples/products-10k.csv` demonstrates streaming/batching at scale.
+
+> **Port already in use?** If host `5432` (PostgreSQL), `6379` (Redis), `3000`
+> (API) or `5173` (web) is taken, override the published ports, e.g.
+> `POSTGRES_PORT=5456 REDIS_PORT=6381 API_PORT=3100 WEB_PORT=5174 docker compose -f infra/docker-compose.yml up --build`
+> (rebuild so the web picks up the new `API_PORT` for its browser calls).
+
+## Develop against the apps (watch mode)
 
 Requirements: **Node** (version pinned in `.nvmrc`), **pnpm** and **Docker**.
 
 ```bash
-# 1. Clone and install (also generates the Prisma client)
+# 1. Install (also generates the Prisma client)
 pnpm install
 cp .env.example .env
 
 # 2. Start infrastructure (PostgreSQL + Redis)
-docker compose -f infra/docker-compose.yml up -d
+docker compose -f infra/docker-compose.yml up -d postgres redis
 
 # 3. Apply database migrations and seed demo data
 pnpm db:migrate
 pnpm --filter @jobflow/database seed
 
-# 4. Run the test suite (pure domain logic, no infra needed)
+# 4. Run the unit suite (pure domain logic, no infra needed)
 pnpm test:unit
 
-# 5. Run the apps in watch mode
+# 5. Run api + worker + web in watch mode
 pnpm dev
 ```
-
-The full one-command stack (`docker compose up --build` for the API, worker and web as well) is delivered in EPIC-09.
-
-> **Port already in use?** If host port `5432` (PostgreSQL), `6379` (Redis) or `3000` (API) is taken by another local service, override it: e.g. `POSTGRES_PORT=5455 REDIS_PORT=6380 docker compose -f infra/docker-compose.yml up -d`, then point `DATABASE_URL` / `REDIS_PORT` / `API_PORT` at the new ports in your `.env`.
 
 ## Common commands
 
