@@ -16,6 +16,8 @@ export type {
   ImportDetail,
   ImportSummary,
   ImportErrorItem,
+  JobAttemptStatus,
+  JobAttemptItem,
   ProductListItem,
   Paginated,
   PaginationQuery,

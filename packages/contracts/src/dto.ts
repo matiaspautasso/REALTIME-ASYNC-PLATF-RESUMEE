@@ -47,6 +47,18 @@ export interface ImportErrorItem {
   message: string;
 }
 
+/** The outcome of one technical Job Attempt (mirrors the DB `JobAttemptStatus`). */
+export type JobAttemptStatus = 'RUNNING' | 'SUCCEEDED' | 'FAILED';
+
+/** One Job Attempt in an Import's attempt history — `GET /imports/:id/attempts`. */
+export interface JobAttemptItem {
+  attemptNumber: number;
+  status: JobAttemptStatus;
+  startedAt: string;
+  finishedAt: string | null;
+  errorMessage: string | null;
+}
+
 /** An imported Product — `GET /products`. */
 export interface ProductListItem {
   sku: string;

@@ -10,10 +10,12 @@ import {
   ImportErrorItem,
   ImportStatus,
   ImportSummary,
+  JobAttemptItem,
+  JobAttemptStatus,
   Paginated,
   type ImportJobData,
 } from '@jobflow/contracts';
-import { Prisma, prisma, type ImportError, type ImportJob } from '@jobflow/database';
+import { Prisma, prisma, type ImportError, type ImportJob, type JobAttempt } from '@jobflow/database';
 import { PageParams, buildPaginated, toSkipTake } from '../common/pagination';
 import { inspectCsv } from './csv-inspector';
 
@@ -83,6 +85,16 @@ export class ImportsService {
     return buildPaginated(rows.map(toErrorItem), total, params);
   }
 
+  /** The Job Attempt history of one Import, oldest first (RF for 06.4). */
+  async getAttempts(id: string): Promise<JobAttemptItem[]> {
+    await this.getJobOrThrow(id);
+    const attempts = await prisma.jobAttempt.findMany({
+      where: { importJobId: id },
+      orderBy: { attemptNumber: 'asc' },
+    });
+    return attempts.map(toAttemptItem);
+  }
+
   /** All Import Errors of one import as CSV rows (header included). */
   async getErrorsCsv(id: string): Promise<string> {
     await this.getJobOrThrow(id);
@@ -130,6 +142,16 @@ export class ImportsService {
     }
     return job;
   }
+}
+
+function toAttemptItem(attempt: JobAttempt): JobAttemptItem {
+  return {
+    attemptNumber: attempt.attemptNumber,
+    status: attempt.status as unknown as JobAttemptStatus,
+    startedAt: attempt.startedAt.toISOString(),
+    finishedAt: attempt.finishedAt ? attempt.finishedAt.toISOString() : null,
+    errorMessage: attempt.errorMessage ?? null,
+  };
 }
 
 function toErrorItem(error: ImportError): ImportErrorItem {

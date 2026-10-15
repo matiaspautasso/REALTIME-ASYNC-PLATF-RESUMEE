@@ -17,6 +17,7 @@ import {
   ImportDetail,
   ImportErrorItem,
   ImportSummary,
+  JobAttemptItem,
   Paginated,
 } from '@jobflow/contracts';
 import { parsePageParams } from '../common/pagination';
@@ -59,6 +60,11 @@ export class ImportsController {
   @Get(':id')
   getDetail(@Param('id') id: string): Promise<ImportDetail> {
     return this.imports.getDetail(id);
+  }
+
+  @Get(':id/attempts')
+  getAttempts(@Param('id') id: string): Promise<JobAttemptItem[]> {
+    return this.imports.getAttempts(id);
   }
 
   @Get(':id/errors')

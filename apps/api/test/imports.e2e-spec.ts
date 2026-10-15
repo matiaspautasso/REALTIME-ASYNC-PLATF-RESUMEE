@@ -114,6 +114,19 @@ describe('Imports (e2e)', () => {
     expect(await prisma.outbox.count({ where: { importJobId: job.id } })).toBe(1);
   });
 
+  it('lists the job attempt history', async () => {
+    const job = await prisma.importJob.create({
+      data: { fileName: 'f.csv', filePath: '/tmp/f.csv', totalRows: 1, status: 'FAILED' },
+    });
+    await prisma.jobAttempt.create({
+      data: { importJobId: job.id, attemptNumber: 1, status: 'FAILED', errorMessage: 'boom' },
+    });
+
+    const response = await request(app.getHttpServer()).get(`/imports/${job.id}/attempts`).expect(200);
+    expect(response.body).toHaveLength(1);
+    expect(response.body[0]).toMatchObject({ attemptNumber: 1, status: 'FAILED', errorMessage: 'boom' });
+  });
+
   it('exports row errors as CSV', async () => {
     const job = await prisma.importJob.create({
       data: { fileName: 'f.csv', filePath: '/tmp/f.csv', totalRows: 1, status: 'COMPLETED_WITH_ERRORS' },
